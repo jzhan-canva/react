@@ -319,6 +319,20 @@ function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   };
 }
 
+const hooks = [];
+
+function unstable_registerHook(hook) {
+  if (typeof hook === 'function') {
+    hooks.push(hook);
+  } else {
+    throw new Error("Hook must be a function");
+  }
+}
+
+function unstable_applyHooks(cb) {
+  return hooks.reduce((wrappedCb, hook) => hook(wrappedCb), cb);
+}
+
 function unstable_scheduleCallback(
   priorityLevel: PriorityLevel,
   callback: Callback,
@@ -367,7 +381,7 @@ function unstable_scheduleCallback(
 
   var newTask: Task = {
     id: taskIdCounter++,
-    callback,
+    callback: unstable_applyHooks(callback),
     priorityLevel,
     startTime,
     expirationTime,
@@ -588,6 +602,8 @@ export {
   unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
   forceFrameRate as unstable_forceFrameRate,
+  unstable_registerHook,
+  unstable_applyHooks
 };
 
 export const unstable_Profiling: {

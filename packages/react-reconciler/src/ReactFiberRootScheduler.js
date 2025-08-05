@@ -51,6 +51,7 @@ import {
   IdlePriority as IdleSchedulerPriority,
   cancelCallback as Scheduler_cancelCallback,
   scheduleCallback as Scheduler_scheduleCallback,
+  applyHooks as Scheduler_applyHooks,
   now,
 } from './Scheduler';
 import {
@@ -548,7 +549,7 @@ function scheduleImmediateTask(cb: () => mixed) {
   // TODO: Can we land supportsMicrotasks? Which environments don't support it?
   // Alternatively, can we move this check to the host config?
   if (supportsMicrotasks) {
-    scheduleMicrotask(() => {
+    scheduleMicrotask(Scheduler_applyHooks(() => {
       // In Safari, appending an iframe forces microtasks to run.
       // https://github.com/facebook/react/issues/22459
       // We don't support running callbacks in the middle of render
@@ -566,7 +567,7 @@ function scheduleImmediateTask(cb: () => mixed) {
         return;
       }
       cb();
-    });
+    }));
   } else {
     // If microtasks are not supported, use Scheduler.
     Scheduler_scheduleCallback(ImmediateSchedulerPriority, cb);
